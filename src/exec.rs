@@ -18,6 +18,17 @@ pub struct Exit {
     stderr_wrote_length: Option<u64>,
 }
 
+#[cfg(test)]
+impl Exit {
+    pub fn new(code: ExitCode) -> Self {
+        Self {
+            code,
+            stdout_wrote_length: None,
+            stderr_wrote_length: None,
+        }
+    }
+}
+
 trait AsyncReadUnpin: AsyncRead + Unpin + Send {}
 trait AsyncWriteUnpin: AsyncWrite + Unpin + Send {}
 

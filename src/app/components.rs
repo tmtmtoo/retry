@@ -10,11 +10,34 @@ pub struct CmdExecutor {
 
 #[async_trait]
 impl super::Component for CmdExecutor {
-    type Output = Result<()>;
+    type Output = Result<Exit>;
 
     async fn handle(&self) -> Self::Output {
-        let exit = self.executor.piped_exec(self.command.as_str()).await;
-        exit.map(|_| ())
+        self.executor.piped_exec(self.command.as_str()).await
+    }
+}
+
+#[derive(new)]
+pub struct PrintableCmdNotFound<C> {
+    command: String,
+    inner: C,
+}
+
+#[async_trait]
+impl<T: 'static, C: super::Component<Output = Result<T>> + Send + Sync> super::Component
+    for PrintableCmdNotFound<C>
+{
+    type Output = Result<T>;
+
+    async fn handle(&self) -> Self::Output {
+        let result = self.inner.handle().await;
+
+        match &result {
+            Err(_) => eprintln!("retry: command not found '{}'", self.command),
+            _ => (),
+        };
+
+        result
     }
 }
 
@@ -49,8 +72,8 @@ impl<T: 'static, C: super::Component<Output = T> + Send + Sync> super::Component
     }
 }
 
-impl From<SharedState<CmdExecutor>> for SharedState<WaitSec> {
-    fn from(state: SharedState<CmdExecutor>) -> Self {
+impl From<SharedState<PrintableCmdNotFound<CmdExecutor>>> for SharedState<WaitSec> {
+    fn from(state: SharedState<PrintableCmdNotFound<CmdExecutor>>) -> Self {
         Self {
             inner: WaitSec {
                 sec: state.config.interval,
@@ -61,12 +84,15 @@ impl From<SharedState<CmdExecutor>> for SharedState<WaitSec> {
     }
 }
 
-impl From<SharedState<WaitSec>> for SharedState<CmdExecutor> {
+impl From<SharedState<WaitSec>> for SharedState<PrintableCmdNotFound<CmdExecutor>> {
     fn from(state: SharedState<WaitSec>) -> Self {
         Self {
-            inner: CmdExecutor {
+            inner: PrintableCmdNotFound {
                 command: state.config.command.to_owned(),
-                executor: state.executor.clone(),
+                inner: CmdExecutor {
+                    command: state.config.command.to_owned(),
+                    executor: state.executor.clone(),
+                },
             },
             config: state.config,
             executor: state.executor,
