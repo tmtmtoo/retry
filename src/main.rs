@@ -34,5 +34,10 @@ async fn main() {
 
     let application = app::App::new(config);
 
-    app::run(application).await
+    let code = match app::run(application).await {
+        app::RetryResult::Succeeded => 0,
+        _ => 1,
+    };
+
+    std::process::exit(code);
 }
