@@ -555,6 +555,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "26412eb97c6b088a6997e05f69403a802a92d520de2f8e63c2b65f9e0f47c4e8"
 
 [[package]]
+name = "retry"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "apply",
+ "argh",
+ "assert_cmd",
+ "async-trait",
+ "derive-getters",
+ "derive-new",
+ "derive_more",
+ "futures",
+ "predicates",
+ "test-case",
+ "tokio",
+]
+
+[[package]]
 name = "signal-hook-registry"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -580,24 +598,6 @@ dependencies = [
  "libc",
  "redox_syscall",
  "winapi 0.3.9",
-]
-
-[[package]]
-name = "supervise"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "apply",
- "argh",
- "assert_cmd",
- "async-trait",
- "derive-getters",
- "derive-new",
- "derive_more",
- "futures",
- "predicates",
- "test-case",
- "tokio",
 ]
 
 [[package]]

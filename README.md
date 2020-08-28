@@ -1,11 +1,11 @@
-# :eyes: supervise
+# :eyes: retry
 
-a simple command line supervisor tool.
+a simple command line retry tool.
 
 ```
-Usage: supervise <command> [-c <count>] [-i <interval>]
+Usage: retry <command> [-c <count>] [-i <interval>]
 
-Supervise command execution.
+Retry command execution until successful.
 
 Options:
   -c, --count       maximum number of executions
@@ -14,6 +14,7 @@ Options:
 ```
 
 ## usage
+
 ```sh
-$ supervice "echo abc" -c 2 -i 2
+$ retry "your command that may fail" -c 2 -i 2
 ```

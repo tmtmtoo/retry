@@ -1,7 +1,7 @@
 use argh::FromArgs;
 
 #[derive(Debug, PartialEq, FromArgs, Getters)]
-/// Supervise command execution.
+/// Retry command execution until successful.
 pub struct Config {
     /// command and options
     #[argh(positional)]
