@@ -12,9 +12,14 @@ pub trait Component {
     async fn handle(&self) -> Self::Output;
 }
 
+pub enum RetryResult {
+    Succeeded,
+    Failure,
+}
+
 pub enum Transition<T> {
     Next(T),
-    Done,
+    Done(RetryResult),
 }
 
 #[async_trait]
@@ -60,12 +65,14 @@ where
     async fn handle(self) -> Transition<Self> {
         match self.state {
             AppState::ExecuteCommand(component) => match component.handle().await {
-                Ok(exit) if exit.code() == &0 => Transition::Done,
+                Ok(exit) if exit.code() == &0 => Transition::Done(RetryResult::Succeeded),
                 _ => {
                     let next_count = self.count + 1;
 
                     match self.limit {
-                        Some(limit) if next_count >= limit => Transition::Done,
+                        Some(limit) if next_count >= limit => {
+                            Transition::Done(RetryResult::Failure)
+                        }
                         _ => Transition::Next(App {
                             state: AppState::Sleep(component.into()),
                             count: next_count,
@@ -86,11 +93,11 @@ where
     }
 }
 
-pub async fn run<S: StateMachine>(mut app: S) {
+pub async fn run<S: StateMachine>(mut app: S) -> RetryResult {
     loop {
         match app.handle().await {
             Transition::Next(next) => app = next,
-            Transition::Done => break,
+            Transition::Done(result) => break result,
         }
     }
 }
@@ -145,9 +152,10 @@ mod tests {
             limit: None,
         };
 
-        let next = app.handle().await;
-
-        assert!(matches!(next, Transition::Done));
+        assert!(matches!(
+            app.handle().await,
+            Transition::Done(RetryResult::Succeeded)
+        ));
     }
 
     #[tokio::test]
@@ -218,10 +226,10 @@ mod tests {
             limit: Some(1),
         };
 
-        assert!(match app.handle().await {
-            Transition::Done => true,
-            _ => false,
-        });
+        assert!(matches!(
+            app.handle().await,
+            Transition::Done(RetryResult::Failure)
+        ));
     }
 
     #[tokio::test]

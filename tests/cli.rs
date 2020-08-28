@@ -38,7 +38,7 @@ fn failed_2_time() {
         .arg("-c")
         .arg("2")
         .assert()
-        .success()
+        .failure()
         .stderr(predicate::eq(
             r"retry: command not found 'dummy'
 retry: command not found 'dummy'
@@ -58,7 +58,7 @@ fn sleep_one_time() {
         .arg("-i")
         .arg("0.5")
         .assert()
-        .success();
+        .failure();
 
     assert!(now.elapsed() >= std::time::Duration::from_secs_f64(0.5))
 }
