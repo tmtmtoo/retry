@@ -11,8 +11,8 @@ fn successful_1_time() {
         .assert()
         .success()
         .stdout(predicate::eq(
-            r"abc
-",
+            r#"abc
+"#,
         ));
 }
 
