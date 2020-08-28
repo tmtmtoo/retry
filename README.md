@@ -13,8 +13,8 @@ Options:
   --help            display usage information
 ```
 
-## usage
+## example
 
 ```sh
-$ retry "your command that may fail" -c 2 -i 2
+$ retry "your command that may fail" -c 2 -i 2 && echo succeeded || echo failed
 ```
