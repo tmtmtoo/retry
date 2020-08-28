@@ -1,6 +1,7 @@
 use assert_cmd::Command;
 use predicates::prelude::*;
 
+#[cfg(not(target_os = "windows"))]
 #[test]
 fn successful_1_time() {
     let mut cmd = Command::cargo_bin("retry").unwrap();
@@ -11,9 +12,22 @@ fn successful_1_time() {
         .assert()
         .success()
         .stdout(predicate::eq(
-            r#"abc
-"#,
+            r"abc
+",
         ));
+}
+
+#[cfg(target_os = "windows")]
+#[test]
+fn successful_1_time() {
+    let mut cmd = Command::cargo_bin("retry").unwrap();
+
+    cmd.arg("echo abc")
+        .arg("-c")
+        .arg("2")
+        .assert()
+        .success()
+        .stdout(predicate::eq("abc\r\n"));
 }
 
 #[test]
