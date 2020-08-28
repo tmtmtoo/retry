@@ -53,7 +53,9 @@ fn failed_2_time() {
         .assert()
         .success()
         .stderr(predicate::eq(
-            "retry: command not found \'dummy\'\r\nretry: command not found \'dummy\'\r\n",
+            r"retry: command not found 'dummy'
+retry: command not found 'dummy'
+",
         ));
 }
 
