@@ -33,7 +33,7 @@ pub struct App<E, S> {
     limit: Option<usize>,
 }
 
-impl App<SharedState<CmdExecutor>, SharedState<WaitSec>> {
+impl App<SharedState<PrintableCmdNotFound<CmdExecutor>>, SharedState<WaitSec>> {
     pub fn new(config: Config) -> Self {
         let executor = Arc::new(TokioPipedCmdExecutor::new());
         let command = config.command.to_owned();
@@ -43,7 +43,7 @@ impl App<SharedState<CmdExecutor>, SharedState<WaitSec>> {
             state: AppState::ExecuteCommand(SharedState::new(
                 config,
                 executor.clone(),
-                CmdExecutor::new(command, executor),
+                PrintableCmdNotFound::new(command.to_owned(), CmdExecutor::new(command, executor)),
             )),
             count: 0,
             limit,
@@ -54,24 +54,26 @@ impl App<SharedState<CmdExecutor>, SharedState<WaitSec>> {
 #[async_trait]
 impl<E, S> StateMachine for App<E, S>
 where
-    E: Component<Output = Result<()>> + Into<S> + Send + Sync,
+    E: Component<Output = Result<Exit>> + Into<S> + Send + Sync,
     S: Component<Output = ()> + Into<E> + Send + Sync,
 {
     async fn handle(self) -> Transition<Self> {
         match self.state {
-            AppState::ExecuteCommand(component) => {
-                let _ = component.handle().await;
-                let next_count = self.count + 1;
+            AppState::ExecuteCommand(component) => match component.handle().await {
+                Ok(exit) if exit.code() == &0 => Transition::Done,
+                _ => {
+                    let next_count = self.count + 1;
 
-                match self.limit {
-                    Some(limit) if next_count >= limit => Transition::Done,
-                    _ => Transition::Next(App {
-                        state: AppState::Sleep(component.into()),
-                        count: next_count,
-                        limit: self.limit,
-                    }),
+                    match self.limit {
+                        Some(limit) if next_count >= limit => Transition::Done,
+                        _ => Transition::Next(App {
+                            state: AppState::Sleep(component.into()),
+                            count: next_count,
+                            limit: self.limit,
+                        }),
+                    }
                 }
-            }
+            },
             AppState::Sleep(component) => {
                 component.handle().await;
 
@@ -97,13 +99,15 @@ pub async fn run<S: StateMachine>(mut app: S) {
 mod tests {
     use super::*;
 
-    struct TestE;
+    struct TestE {
+        output: Box<dyn Fn() -> Result<Exit> + Send + Sync>,
+    }
 
     #[async_trait]
     impl Component for TestE {
-        type Output = Result<()>;
+        type Output = Result<Exit>;
         async fn handle(&self) -> Self::Output {
-            Ok(())
+            (*self.output)()
         }
     }
 
@@ -125,14 +129,33 @@ mod tests {
 
     impl From<TestS> for TestE {
         fn from(_: TestS) -> Self {
-            TestE
+            TestE {
+                output: Box::new(|| Ok(Exit::new(1))),
+            }
         }
+    }
+
+    #[tokio::test]
+    async fn exec_cmd_to_done_with_success() {
+        let app = App::<TestE, TestS> {
+            state: AppState::ExecuteCommand(TestE {
+                output: Box::new(|| Ok(Exit::new(0))),
+            }),
+            count: 0,
+            limit: None,
+        };
+
+        let next = app.handle().await;
+
+        assert!(matches!(next, Transition::Done));
     }
 
     #[tokio::test]
     async fn exec_cmd_to_sleep_without_limit() {
         let app = App::<TestE, TestS> {
-            state: AppState::ExecuteCommand(TestE),
+            state: AppState::ExecuteCommand(TestE {
+                output: Box::new(|| Ok(Exit::new(1))),
+            }),
             count: 0,
             limit: None,
         };
@@ -159,7 +182,9 @@ mod tests {
     #[tokio::test]
     async fn exec_cmd_to_sleep_with_limit() {
         let app = App::<TestE, TestS> {
-            state: AppState::ExecuteCommand(TestE),
+            state: AppState::ExecuteCommand(TestE {
+                output: Box::new(|| Ok(Exit::new(1))),
+            }),
             count: 0,
             limit: Some(2),
         };
@@ -184,9 +209,11 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn exec_cmd_to_done() {
+    async fn exec_cmd_to_done_with_fail() {
         let app = App::<TestE, TestS> {
-            state: AppState::ExecuteCommand(TestE),
+            state: AppState::ExecuteCommand(TestE {
+                output: Box::new(|| Ok(Exit::new(1))),
+            }),
             count: 0,
             limit: Some(1),
         };
