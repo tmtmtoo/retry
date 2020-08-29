@@ -1,8 +1,18 @@
 [package]
-name = "retry"
+name = "rty"
 version = "0.1.1"
 authors = ["tmtmtoo <tmtmt2209@gmail.com>"]
 edition = "2018"
+license = "MIT"
+description = "A simple command line retry tool."
+repository = "https://github.com/tmtmtoo/retry"
+homepage = "https://github.com/tmtmtoo/retry"
+readme = "README.md"
+categories = ["command-line-interface", "command-line-utilities"]
+keywords = ["process", "retry"]
+
+[badges]
+github = { repository = "tmtmtoo/retry", workflow = "Rust" }
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
