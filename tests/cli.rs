@@ -4,7 +4,7 @@ use predicates::prelude::*;
 #[cfg(not(target_os = "windows"))]
 #[test]
 fn successful_1_time() {
-    let mut cmd = Command::cargo_bin("retry").unwrap();
+    let mut cmd = Command::cargo_bin("rty").unwrap();
 
     cmd.arg("echo abc")
         .arg("-c")
@@ -20,7 +20,7 @@ fn successful_1_time() {
 #[cfg(target_os = "windows")]
 #[test]
 fn successful_1_time() {
-    let mut cmd = Command::cargo_bin("retry").unwrap();
+    let mut cmd = Command::cargo_bin("rty").unwrap();
 
     cmd.arg("echo abc")
         .arg("-c")
@@ -32,7 +32,7 @@ fn successful_1_time() {
 
 #[test]
 fn failed_2_time() {
-    let mut cmd = Command::cargo_bin("retry").unwrap();
+    let mut cmd = Command::cargo_bin("rty").unwrap();
 
     cmd.arg("dummy")
         .arg("-c")
@@ -40,15 +40,15 @@ fn failed_2_time() {
         .assert()
         .failure()
         .stderr(predicate::eq(
-            r"retry: command not found 'dummy'
-retry: command not found 'dummy'
+            r"rty: command not found 'dummy'
+rty: command not found 'dummy'
 ",
         ));
 }
 
 #[test]
 fn sleep_one_time() {
-    let mut cmd = Command::cargo_bin("retry").unwrap();
+    let mut cmd = Command::cargo_bin("rty").unwrap();
 
     let now = std::time::Instant::now();
 

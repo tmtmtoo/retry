@@ -33,7 +33,7 @@ impl<T: 'static, C: super::Component<Output = Result<T>> + Send + Sync> super::C
         let result = self.inner.handle().await;
 
         match &result {
-            Err(_) => eprintln!("retry: command not found '{}'", self.command),
+            Err(_) => eprintln!("rty: command not found '{}'", self.command),
             _ => (),
         };
 

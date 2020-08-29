@@ -1,9 +1,9 @@
-# :eyes: retry
+# :eyes: rty
 
 a simple command line retry tool.
 
 ```
-Usage: retry <command> [-c <count>] [-i <interval>]
+Usage: rty <command> [-c <count>] [-i <interval>]
 
 Retry command execution until successful.
 
@@ -16,5 +16,5 @@ Options:
 ## example
 
 ```sh
-$ retry "your command that may fail" -c 2 -i 2 && echo succeeded || echo failed
+$ rty "your command that may fail" -c 2 -i 2 && echo succeeded || echo failed
 ```
