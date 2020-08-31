@@ -47,6 +47,23 @@ rty: command not found 'dummy'
 }
 
 #[test]
+fn failed_2_time_with_double_hyphen() {
+    let mut cmd = Command::cargo_bin("rty").unwrap();
+
+    cmd.arg("-c")
+        .arg("2")
+        .arg("--")
+        .arg("dummy")
+        .assert()
+        .failure()
+        .stderr(predicate::eq(
+            r"rty: command not found 'dummy'
+rty: command not found 'dummy'
+",
+        ));
+}
+
+#[test]
 fn sleep_one_time() {
     let mut cmd = Command::cargo_bin("rty").unwrap();
 

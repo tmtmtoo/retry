@@ -3,18 +3,26 @@
 a simple command line retry tool.
 
 ```
-Usage: rty <command> [-c <count>] [-i <interval>]
-
+rty
 Retry command execution until successful.
 
-Options:
-  -c, --count       maximum number of executions
-  -i, --interval    execution interval (sec)
-  --help            display usage information
+USAGE:
+    rty [OPTIONS] [COMMAND]...
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+OPTIONS:
+    -c, --count <count>          maximum number of executions
+    -i, --interval <interval>    execution interval (sec) [default: 0.1]
+
+ARGS:
+    <COMMAND>...    command and options
 ```
 
 ## example
 
-```sh
-$ rty "your command that may fail" -c 2 -i 2 && echo succeeded || echo failed
+```bash
+$ rty -c 2 -i 2 -- your command that may fail && echo succeeded || echo failed
 ```
