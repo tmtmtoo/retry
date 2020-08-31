@@ -1,4 +1,3 @@
-use crate::config::*;
 use crate::exec::*;
 use crate::prelude::*;
 
@@ -33,7 +32,13 @@ impl<T: 'static, C: super::Component<Output = Result<T>> + Send + Sync> super::C
         let result = self.inner.handle().await;
 
         match &result {
-            Err(_) => eprintln!("rty: command not found '{}'", self.command),
+            Err(_) => {
+                if self.command.is_empty() {
+                    eprintln!("rty: no command entered")
+                } else {
+                    eprintln!("rty: command not found '{}'", self.command)
+                }
+            }
             _ => (),
         };
 
@@ -56,7 +61,8 @@ impl super::Component for WaitSec {
 
 #[derive(new)]
 pub struct SharedState<C> {
-    config: Config,
+    command: String,
+    interval: f64,
     executor: Arc<dyn PipedCmdExecutor>,
     inner: C,
 }
@@ -76,9 +82,10 @@ impl From<SharedState<PrintableCmdNotFound<CmdExecutor>>> for SharedState<WaitSe
     fn from(state: SharedState<PrintableCmdNotFound<CmdExecutor>>) -> Self {
         Self {
             inner: WaitSec {
-                sec: state.config.interval,
+                sec: state.interval,
             },
-            config: state.config,
+            command: state.command,
+            interval: state.interval,
             executor: state.executor,
         }
     }
@@ -88,13 +95,14 @@ impl From<SharedState<WaitSec>> for SharedState<PrintableCmdNotFound<CmdExecutor
     fn from(state: SharedState<WaitSec>) -> Self {
         Self {
             inner: PrintableCmdNotFound {
-                command: state.config.command.to_owned(),
+                command: state.command.to_owned(),
                 inner: CmdExecutor {
-                    command: state.config.command.to_owned(),
+                    command: state.command.to_owned(),
                     executor: state.executor.clone(),
                 },
             },
-            config: state.config,
+            command: state.command,
+            interval: state.interval,
             executor: state.executor,
         }
     }
