@@ -1,3 +1,5 @@
+## This has been moved into the [cx](https://github.com/tmtmtoo/cx).
+
 # :eyes: rty
 
 a simple command line retry tool.
